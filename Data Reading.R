@@ -1,4 +1,4 @@
-##### Code for reading preliminary database 
+##### Dissertation Maria Reyes Retana - Code for reading preliminary database 
 
 ##### Libraries #####
 
@@ -11,7 +11,7 @@ library(purrr)
 
 # Book control
  
- names <- c("c_portad", "c_ls", "hh02w_bc")
+ names <- c("c_portad", "c_ls", "hh02w_bc", "c_conpor")
 
  for(i in names){
    filepath <- file.path("Data/2002/hh02dta_bc", paste(i,".dta",sep=""))
@@ -29,7 +29,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "hh02w_b5")
+ names <- c("v_portad", "v_edna", "hh02w_b5", "v_conpor")
  
  for(i in names){
    filepath <- file.path("Data/2002/hh02dta_b5", paste(i,".dta",sep=""))
@@ -66,7 +66,7 @@ library(purrr)
  
  # Book control 
  
- names <- c("c_portad", "c_ls", "hh05w_bc", "hh05w_bcl")
+ names <- c("c_portad", "c_ls", "hh05w_bc", "hh05w_bcl", "c_conpor")
  
  for(i in names){
     filepath <- file.path("Data/2005/hh05dta_bc", paste(i,".dta",sep=""))
@@ -84,7 +84,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "ehh05w_b5", "ehh05w_b5l")
+ names <- c("v_portad", "v_edna", "ehh05w_b5", "ehh05w_b5l", "v_conpor")
  
  for(i in names){
     filepath <- file.path("Data/2005/hh05dta_b5", paste(i,".dta",sep=""))
@@ -122,7 +122,7 @@ library(purrr)
 
  # Book control 
  
- names <- c("c_portad", "c_ls", "hh09w_bc", "hh09_lw_bc")
+ names <- c("c_portad", "c_ls", "hh09w_bc", "hh09_lw_bc", "c_conpor")
  
  for(i in names){
     filepath <- file.path("Data/2009/hh09dta_bc", paste(i,".dta",sep=""))
@@ -140,7 +140,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "hh09w_b5", "hh09_lw_b5")
+ names <- c("v_portad", "v_edna", "hh09w_b5", "hh09_lw_b5", "v_conpor")
  
  for(i in names){
     filepath <- file.path("Data/2009/hh09dta_b5", paste(i,".dta",sep=""))
