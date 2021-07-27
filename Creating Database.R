@@ -1,4 +1,5 @@
-##### Dissertation Maria Reyes Retana - Code for creating databases 
+##### Dissertation Maria Reyes Retana 
+# This code reads the raw data and merge them into prelimanary complete databases
 
 ##### Libraries #####
 
@@ -14,8 +15,8 @@ source('Data Reading.R')
 
 ##### General data base: generate unified folio and pid_link: individual level #####
 
-# Basic information: it is necessary to generate a unified identifier for every individual and household across all databases
-# we will generate that identifier in this section for the three waves
+# Basic information: it is necessary to generate a unified identifier for every individual and household across the 3 waves
+# we will generate that identifier in this section 
 
 basic_ind02 <- c_ls_02 %>%
   mutate(year = 2002,
@@ -83,6 +84,8 @@ basic_ind09 <- c_ls_09 %>%
   mutate(pid_link_uni = paste(str_sub(pid_link_aux, 1L, 6L), round_i, str_sub(pid_link_aux, -4L), sep = ""), 
          pid_link_uni = case_when(pid_link_uni == "B" ~ paste(folio_2, round_i, term_h, ls, sep = ""),
                                     TRUE ~ pid_link_uni),
+         pid_link_uni = case_when(pid_link == "006960CP0302" ~ "006960C0302",
+                                  TRUE ~ pid_link_uni),
          folio_uni = paste(str_sub(folio, 1L, 6L), round_h, str_sub(folio, -2L), sep = "")) %>% 
   select(year, folio, ls, pid_link, pid_link_uni, folio_uni, 
          ls02_2, ls03_21, ls03_22, ls04, ls05_1, ls06, ls07, ls10, ls11, ls12, ls13_1, ls13_2, ls14, ls15_1, ls16) %>% 
@@ -95,7 +98,7 @@ basic_ind09 <- c_ls_09 %>%
                                   ls06>=10  & ls06<50 ~ paste(folio_uni, ls06, sep = ""), 
                                   ls06 == 51 ~ "does not live in household", 
                                   ls06 == 53 ~ "deceased", 
-                                  TRUE ~ NA_character_))
+                                  TRUE ~ NA_character_)) 
 
 ##### State: Household level #####
 
@@ -555,6 +558,8 @@ rm(list=setdiff(ls(), c("basic_folio", "bio_base", "weight_s", "weight_sl", "bas
                         "weight_c", "weight_cl", "cog_ad", "weight_ea", "weight_eal", "cog_ch", 
                         "weight_en", "weight_enl", "dec_base", "weight_b3a", "weight_b3al", 
                         "edna_base", "weight_5", "weight_5l")))
+
+# This is the complete raw data merged for all the 3 waves
 
 save.image(file = 'Outputs/Datasets_dissertation.RData')
 

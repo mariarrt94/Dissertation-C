@@ -1,4 +1,6 @@
-##### Dissertation Maria Reyes Retana - Code for reading preliminary database 
+##### Dissertation Maria Reyes Retana 
+# This code reads the raw data base from the Mexican Family Life Survey which can be found here:
+# http://www.ennvih-mxfls.org/english/ennvih-1.html 
 
 ##### Libraries #####
 
