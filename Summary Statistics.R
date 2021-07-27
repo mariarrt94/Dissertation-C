@@ -1,4 +1,5 @@
-##### Dissertation Maria Reyes Retana - Code for creating summary statistics and main databases 
+##### Dissertation Maria Reyes Retana 
+# Code for creating tidy data
 
 ##### Libraries #####
 
@@ -13,7 +14,7 @@ options(scipen = 999)
 
 ##### Load required information #####
 
-# Raw data sets
+# Import complete raw data set
 load('Outputs/Datasets_dissertation.RData')
 
 # Inflation code to adjust income and spending
@@ -84,6 +85,26 @@ decisions <- dec_base %>%
 dec_points <- decisions %>% 
   select(year, folio, ls, pid_link, decision_points, decision_alone)
 
+dec_summary <- decisions %>% 
+  ungroup() %>% 
+  filter(ls05_1 ==1 | ls05_1 == 2) %>% 
+  select(year, ls04, `1`:`12`) %>% 
+  drop_na() %>% 
+  gather(decision, decision_maker, `1`:`12`) %>% 
+  group_by(year, decision, ls04, decision_maker) %>% 
+  summarise(tot = n()) %>% 
+  ungroup() %>% 
+  group_by(year, decision, ls04) %>% 
+  mutate(gen = sum(tot), porc = tot/gen) %>% 
+  ungroup() %>% 
+  mutate(gender_year = paste(year, ls04, sep = "-"), decision = as.numeric(decision)) %>% 
+  select(gender_year, decision, decision_maker, porc) %>% 
+  filter(decision_maker == "Own") %>% 
+  spread(decision_maker, porc) %>% 
+  spread(gender_year, Own)
+
+write.csv(dec_summary, "Outputs/decision_gender.csv")
+
 #####  Summary statistics: Household #####
 
 out <- boxplot(basic_ind$ls13_2, plot=FALSE)$out
@@ -105,15 +126,16 @@ summary_h <- basic_ind %>%
 
 summary_household <- basic_ind %>% 
   left_join(INF) %>% 
+  left_join(basic_folio) %>%
   filter(!ls13_2 %in% out) %>% 
   mutate(children = case_when(ls05_1 == 3 | ls05_1 == 4 ~ 1, 
                               TRUE ~ 0)) %>% 
+  ungroup() %>% 
   group_by(folio_uni, year) %>% 
   summarise(income = sum(ls13_2, na.rm = TRUE), income_com = sum(ls13_2, na.rm = TRUE)*fact_infl, education = mean(ls14, na.rm = TRUE),
             children = sum(children), number_persons = n(),  income_pc = sum(ls13_2, na.rm = TRUE)/n(),
             income_pc_com = (sum(ls13_2, na.rm = TRUE)/n())*fact_infl) %>% 
-  distinct() %>% 
-  left_join(basic_folio)
+  distinct()
   
 summary_house <- describeBy(summary_household, group = summary_household$year)
 
@@ -158,14 +180,22 @@ aux_adul <- basic_ind %>%
          HH = case_when(ls05_1 == 1 ~ 1, 
                         TRUE ~ 0)) %>% 
   left_join(dec_points) %>% 
-  select(year, ent, state_name, mpio, date_int, dummy_div, folio, pid_link, folio_uni, pid_link_uni,  sex, ls05_1, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
-         worked_12, ed06, ed07_1, married, ls04, ls13_2, income_c, ls14, sa07_21, sa08_21, point, test_score, decision_points, decision_alone, HH)
+  select(year, ent, state_name, mpio, dummy_div, date_int, folio, pid_link, folio_uni, pid_link_uni,  sex, ls05_1, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
+         worked_12, ed06, ed07_1, married, ls04, ls13_2, income_c, ls14, sa07_21, sa08_21, point, test_score, decision_points, decision_alone, HH) 
 
-aux_muj <- aux_adul %>% filter(sex == 0) #%>% 
-  #filter(ls05_1 == 1 | ls05_1 == 2)
+adul_count <- aux_adul %>% 
+  group_by(sex, year) %>% 
+  summarise(count = n())
 
-aux_hom <- aux_adul %>% filter(sex == 1)# %>% 
- # filter(ls05_1 == 1 | ls05_1 == 2)
+aux_muj <- aux_adul %>% filter(sex == 0) %>% 
+  filter(ls05_1 == 1 | ls05_1 == 2) %>% 
+  select(-c("date_int")) %>% 
+  distinct()
+
+aux_hom <- aux_adul %>% filter(sex == 1) %>% 
+  filter(ls05_1 == 1 | ls05_1 == 2) %>% 
+  select(-c("date_int")) %>% 
+  distinct()
 
 summary_muj <- describeBy(aux_muj, group = aux_muj$year)
 
@@ -200,7 +230,7 @@ aux_child <- edna_base %>%
          months_aux = case_when(!is.na(age_months)  ~ age_months, 
                             is.na(age_months) & !is.na(ls02_2) ~ ls02_2*12,
                             TRUE ~ NA_real_),
-         Months = case_when(months_aux < 0 ~ ls02_2*12, 
+         Month = case_when(months_aux < 0 ~ ls02_2*12, 
                             TRUE ~ months_aux),
          age_years = case_when(!is.na(age_aux) ~ age_aux, 
                              is.na(age_aux) & !is.na(ls02_2) ~ ls02_2,
@@ -208,9 +238,13 @@ aux_child <- edna_base %>%
          Years = case_when(age_years < 0 ~ ls02_2, 
                             TRUE ~ age_years)) %>% 
   filter(!Years>15) %>%
-  select(-c("age_months", "age_aux", "months_aux", "age_years"))
+  select(-c("age_months", "age_aux", "months_aux", "age_years", "state_name"))
   
-summary_child <- describeBy(aux_child, group = aux_child$year)
+  child_for_sum <- aux_child %>% 
+    select(-c("date_int")) %>% 
+    distinct()
+
+summary_child <- describeBy(child_for_sum, group = child_for_sum$year)
 
 ###### Save summary #####
 
