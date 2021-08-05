@@ -8,6 +8,7 @@ library(tidyverse)
 library(readxl)
 library(xlsx)
 library(lubridate)
+library(panelr)
 
 rm(list = ls())
 options(scipen = 999)
@@ -51,9 +52,10 @@ mom_base <- aux_adul %>% filter(sex == 0) %>%
   left_join(women_index_res, by = c("year", "folio", "folio_uni", "pid_link_uni")) %>% 
   rename(age_mom = ls02_2, spanish_mom = spanish, indigenous_mom = indigenous, worked_12_mom = worked_12, 
          edu_mom = ed06, married_mom = married, income_c_mom = income_c, height_mom = sa07_21, weight_mom = sa08_21, 
-         test_score_mom = test_score, decision_mom = decision_points, HH_mom = HH, pid_link_mom = pid_link_uni) %>% 
+         test_score_mom = test_score, decision_mom = decision_points, HH_mom = HH, pid_link_mom = pid_link_uni, rel_hh_mom = ls05_1, 
+         PC1tot_mom = PC1tot, PC2tot_mom = PC2tot) %>% 
   select(year, pid_link_mom, age_mom, spanish_mom, indigenous_mom, worked_12_mom, edu_mom, married_mom, income_c_mom, 
-         height_mom, weight_mom, test_score_mom, decision_mom, HH_mom, dummy_div, PC1tot, PC1work, PC1house, PC1agency) %>% 
+         height_mom, weight_mom, test_score_mom, decision_mom, rel_hh_mom, HH_mom, dummy_div, PC1tot_mom, PC2tot_mom) %>% 
   distinct()
   
 dad_base <- aux_adul %>% filter(sex == 1) %>% 
@@ -61,9 +63,9 @@ dad_base <- aux_adul %>% filter(sex == 1) %>%
   rename(age_dad = ls02_2, spanish_dad = spanish, indigenous_dad = indigenous, worked_12_dad = worked_12, 
          edu_dad = ed06, married_dad = married, income_c_dad = income_c, height_dad = sa07_21, weight_dad = sa08_21, 
          test_score_dad = test_score, decision_dad = decision_points, HH_dad = HH, pid_link_dad = pid_link_uni, 
-         PC1tot_dad = PC1tot, PC1work_dad = PC1work, PC1house_dad = PC1house, PC1agency_dad = PC1agency) %>% 
+         PC1tot_dad = PC1tot, PC2tot_dad = PC2tot, rel_hh_dad = ls05_1) %>% 
   select(year, pid_link_dad, age_dad, spanish_dad, indigenous_dad, worked_12_dad, edu_dad, married_dad, income_c_dad, 
-         height_dad, weight_dad, test_score_dad, decision_dad, HH_dad, PC1tot_dad, PC1work_dad, PC1house_dad, PC1agency_dad) %>% 
+         height_dad, weight_dad, test_score_dad, decision_dad,rel_hh_dad, HH_dad, PC1tot_dad, PC2tot_dad) %>% 
   distinct()
 
 # here we need to merge the data from the parents to the children and create anthropocentric indicators, also scale test.
@@ -77,7 +79,8 @@ base_child <- aux_child %>%
   left_join(hfa, by = c("Month", "sex")) %>%
   rename(height = sa07_21, weight = sa08_21) %>% 
   mutate(hfa_z = (height - Median)/StDev, 
-         test_score_z = scale(test_score, center = TRUE, scale = TRUE))
+         test_score_z = scale(test_score, center = TRUE, scale = TRUE)) %>% 
+  filter(rel_hh_mom == 1 | rel_hh_mom == 2 | rel_hh_dad == 1 | rel_hh_dad == 2)
 
 ##### Select necessary databases #####
 
