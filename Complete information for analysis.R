@@ -115,39 +115,16 @@ base_child <- aux_child %>%
 
 rm(list=setdiff(ls(), c("base_child", "mom_base", "dad_base", "hfa", "decisions", "summary_dec", "aux_adul", "summary_household")))
 
-base_child_sta <- base_child %>% 
-  mutate(letter = substr(pid_link_uni, 7, 7), 
-         pid_link = case_when(letter == "A" ~ paste(substr(pid_link_uni, 1, 6), "1", substr(pid_link_uni, 8, 11), sep = ""),
-                   letter == "B" ~ paste(substr(pid_link_uni, 1, 6), "2", substr(pid_link_uni, 8, 11), sep = ""),
-                   letter == "C" ~ paste(substr(pid_link_uni, 1, 6), "2", substr(pid_link_uni, 8, 11), sep = ""),
-                   TRUE ~ NA_character_),
-         folio = case_when(letter == "A" ~ paste(substr(folio_uni, 1, 6), "1", substr(folio_uni, 8, 9), sep = ""),
-                           letter == "B" ~ paste(substr(folio_uni, 1, 6), "2", substr(folio_uni, 8, 9), sep = ""),
-                           letter == "C" ~ paste(substr(folio_uni, 1, 6), "2", substr(folio_uni, 8, 9), sep = ""),
-                           TRUE ~ NA_character_)) %>% 
-  select(-c("letter"))
-
-write.dta(base_child_sta, "Outputs/base_child.dta")
-
-##### Summary for children considered #####
-
-data_child_sum <- base_child %>% 
-  select(year, sex, ls02_2, school_att, worked_12, edn09, test_score, height, worked_12_mom, worked_12_dad, 
-         HH_mom, income_crea_pc, children, number_persons, 
-         decision_mom, decision_dad) %>% 
-  filter(!(decision_mom == 0 & decision_dad == 0)) %>% 
-  select(-c("decision_mom", "decision_dad")) %>% 
-  rename('Boys (%)' = sex, Age = ls02_2, 'Attends school?' = school_att, 'Worked last 12 months?'= worked_12, 'Level' = edn09, 'Raven test-score (0%-100%)' = test_score, 
-         'Height (cm)' = height, 'Mom works?' = worked_12_mom, 'Dad works?' = worked_12_dad, 
-         'Female household head' = HH_mom, 'Household per capita income' = income_crea_pc, 
-         'Number of children'= children, 'Number of persons' = number_persons)
-
-table_child <- data_child_sum %>% 
-  tbl_summary(by = year, statistic = list(all_continuous() ~ "{mean} ({sd})"),type = list('Number of persons' ~ "continuous"),  missing = "no") %>% 
-  add_n() %>% # add column with total number of non-missing observations
-  # add_p() %>% # test for a difference between groups
-  modify_header(label = "**Variable**") %>% # update the column header
-  bold_labels() %>% 
-  as_flex_table() 
-
-save_as_docx(table_child, path = "Outputs/table_child.docx")
+# base_child_sta <- base_child %>% 
+#   mutate(letter = substr(pid_link_uni, 7, 7), 
+#          pid_link = case_when(letter == "A" ~ paste(substr(pid_link_uni, 1, 6), "1", substr(pid_link_uni, 8, 11), sep = ""),
+#                    letter == "B" ~ paste(substr(pid_link_uni, 1, 6), "2", substr(pid_link_uni, 8, 11), sep = ""),
+#                    letter == "C" ~ paste(substr(pid_link_uni, 1, 6), "2", substr(pid_link_uni, 8, 11), sep = ""),
+#                    TRUE ~ NA_character_),
+#          folio = case_when(letter == "A" ~ paste(substr(folio_uni, 1, 6), "1", substr(folio_uni, 8, 9), sep = ""),
+#                            letter == "B" ~ paste(substr(folio_uni, 1, 6), "2", substr(folio_uni, 8, 9), sep = ""),
+#                            letter == "C" ~ paste(substr(folio_uni, 1, 6), "2", substr(folio_uni, 8, 9), sep = ""),
+#                            TRUE ~ NA_character_)) %>% 
+#   select(-c("letter"))
+# 
+# write.dta(base_child_sta, "Outputs/base_child.dta")

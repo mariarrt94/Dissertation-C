@@ -270,7 +270,7 @@ women_index <- decisions %>%
     rbind(table_pca_c) %>% 
     mutate(weight1 = PC1*SD)
   
-  write.csv(table_pca, "Outputs/table_pca_sep.csv")
+  write.csv(table_pca_sep, "Outputs/table_pca_sep.csv")
   
   # correlogram
   
