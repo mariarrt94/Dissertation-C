@@ -222,7 +222,7 @@ aux_child <- edna_base %>%
          worked_12 = case_when(ls12 == 1 ~ 1, 
                                ls12 == 3 ~ 0, 
                                TRUE ~ NA_real_)) %>% 
-  select(year, ent, state_name, mpio, date_int, dummy_div, folio, pid_link, folio_uni, pid_link_uni,  sex, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
+  select(year, ent, state_name, mpio, date_int, folio, pid_link, folio_uni, pid_link_uni,  sex, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
          worked_12, edn09, sa07_21, sa08_21, point, test_score, pid_link_mom, pid_link_dad) %>% 
   mutate(date_born = make_date(ls03_22, ls03_21),
          age_months = interval(date_born, date_int)%/% months(1),
@@ -238,7 +238,9 @@ aux_child <- edna_base %>%
          Years = case_when(age_years < 0 ~ ls02_2, 
                             TRUE ~ age_years)) %>% 
   filter(!Years>15) %>%
-  select(-c("age_months", "age_aux", "months_aux", "age_years", "state_name"))
+  filter(!(pid_link_uni == "014030B0304" & ls02_2 == 0)) %>% 
+  select(-c("age_months", "age_aux", "months_aux", "age_years", "state_name")) %>% 
+  distinct()
   
   child_for_sum <- aux_child %>% 
     select(-c("date_int")) %>% 

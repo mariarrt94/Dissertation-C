@@ -34,7 +34,7 @@ women_index <- decisions %>%
   mutate(points_dec = case_when(person == "Spouse" ~  0, 
                                 person == "Both" ~ 1, 
                                 person == "Other" ~ 0, 
-                                person == "Own" ~ 2, 
+                                person == "Own" ~ 1, 
                                 TRUE ~ NA_real_)) %>% 
   select(year, folio, folio_uni, pid_link_uni, decision, points_dec, decision_points) %>% 
   spread(decision, points_dec) %>% 
@@ -44,7 +44,7 @@ women_index <- decisions %>%
 
   PCA_G <- PCA(women_index[c(6:17)], scale.unit = TRUE, ncp = 5, graph = TRUE)
   
-  index_tot <- prcomp(women_index[c(6:17)], scale. = TRUE, center = TRUE, na.rm = TRUE)
+  index_tot <- prcomp(women_index[c(6:17)], scale. = TRUE, center = TRUE)
   
   summary(index_tot)
   
@@ -163,47 +163,155 @@ women_index <- decisions %>%
   
   write.csv(table_pca, "Outputs/table_pca.csv")
 
-  ##### Other decisions by group: not for the moment #####
-  #money-work decisions 7, 8, 9, 10, 11, 12 
-  
-  PCA_work <- PCA(women_index[c("money_relatives", "money_spo_relatives", "own_work", 
-                             "spouse_work", "strong_expenditure")], scale.unit = TRUE, ncp = 5, graph = TRUE)
-  
-  index_work <- prcomp(women_index[c("money_relatives", "money_spo_relatives", "own_work", 
-                                     "spouse_work", "strong_expenditure")], scale = TRUE, center = TRUE)
+  ##### Other decisions by group: main #####
+  #money-work decisions 7, 8, 9, 10 most relevant in PC2 tot 
+
+  PCA_work <- PCA(women_index[c(17,16,14,11,12)], scale.unit = TRUE, ncp = 5, graph = TRUE)
+
+  index_work <- prcomp(women_index[c(17,16,14,11,12)], scale = TRUE, center = TRUE)
   summary(index_work)
   
-  # Agency index
+  # corre
   
-  PCA_agency <- PCA(women_index[c("strong_expenditure", "own_clothes", "money_relatives", "children_health", "food_house")], scale.unit = TRUE, ncp = 5, graph = TRUE)
+  var_work <- get_pca_var(index_work)
   
-  index_agency <- prcomp(women_index[c("strong_expenditure", "own_clothes", "money_relatives", "children_health", "food_house")], scale = TRUE, center = TRUE)
- 
-   summary(index_agency)
+  pca_work <- var_work$cor[,1:2]
   
-  # household decisions 1:6, 12
+  corrplot(var_work$cos2, is.corr=FALSE)
   
-  PCA_house <- PCA(women_index[c("children_clothes", "children_education", "children_health", 
-                                 "contraceptives", "food_house", "own_clothes", "spouse_clothes")], scale.unit = TRUE, ncp = 5, graph = TRUE)
+  # graph 2 fisrt
   
-  index_house <- prcomp(women_index[c("children_clothes", "children_education", "children_health", 
-                                      "contraceptives", "food_house", "own_clothes", "spouse_clothes")], scale = TRUE, center = TRUE)
-  summary(index_house)
+  index_work$x[,1] <- - index_work$x[,1]
+  index_work$x[,2] <- - index_work$x[,2]
+  index_work$rotation[,1] <- - index_work$rotation[,1]
+  index_work$rotation[,2] <- - index_work$rotation[,2]
   
+  
+  graph_dir_money <- fviz_pca_var(index_work, axes = c(1,2), 
+                                col.var = "contrib", # Color by contributions to the PC
+                                gradient.cols = c(	"#3792cb", "#005b96", "#03396c", "#011f4b", "#000a14"),
+                                repel = TRUE,     # Avoid text overlapping,
+                                labelsize = 2) +
+    theme(axis.text = element_text(size = 10, color = "#000f1c", face = "bold", family = 'Calibri'),
+          plot.caption = element_text(hjust = 0, size = 10),
+          text = element_text(size = 9, color = "#000f1c", face = "bold", family = 'Calibri')) + 
+    labs(title = "",
+         caption = "Source: MxFLS-1, MxFLS-2, MxFLS-3.")
+  
+  ggsave("Outputs/Graphs/Position of the first 2 components work.jpg",device = "jpeg",plot = graph_dir_money , width = 12, height = 12, units = "cm")
+
+  # # Agency index
+  # 
+  # PCA_agency <- PCA(women_index[c(17, 6, 9, 10, 11)], scale.unit = TRUE, ncp = 5, graph = TRUE)
+  # 
+  # index_agency <- prcomp(women_index[c(17, 6, 9, 10, 11)], scale = TRUE, center = TRUE)
+  # 
+  #  summary(index_agency)
+   
+   # correlogram
+   
+   # var_agency <- get_pca_var(index_agency)
+   # 
+   # pca_agency <- var_agency$cor[,1:2]
+   # 
+   # corrplot(var_agency$cos2, is.corr=FALSE)
+
+  # children decisions relevant: 5,6,4,12
+
+  PCA_ch <- PCA(women_index[c(6:10)], scale.unit = TRUE, ncp = 5, graph = TRUE)
+
+  index_ch <- prcomp(women_index[c(6:10)], scale = TRUE, center = TRUE)
+  
+  summary(index_ch)
+  
+  ##### Table for dissertation #####
+  
+  eig_w <- get_eig(index_work)
+  
+  var_w <- get_pca_var(index_work)
+  
+  pca_var_w <- var_w$cor[,1:2]
+  
+  corrplot(var_w$cos2, is.corr=FALSE)
+  
+  # by individual x = scores PCA specific for persons
+  
+  scores_w <- index_work$x
+  
+  #by var
+  
+  loadings_w <- index_work$rotation
+  
+  corr <- t(loadings_w)*sd
+  
+  #another way of computing correlation
+  
+  corr2 <- cor(scores_w, women_index[c(6:17)])
+  
+  # loadings
+  
+  table_pca_w <- as.data.frame(index_work$rotation[,1:2]) %>% 
+    arrange(desc(PC1)) %>% 
+    select(PC1)%>% 
+    mutate(Index = "Financial")
+  
+  table_pca_w$SD <- index_work$sdev
+  
+  sqrt(1/ncol(women_index[c(17,16,14,11,12)])) #cut off for important loadings = 0.447
+  
+  table_pca_c <- as.data.frame(index_ch$rotation[,1:2]) %>% 
+    arrange(desc(PC1)) %>% 
+    select(PC1) %>% 
+    mutate(Index = "Children")
+  
+  table_pca_c$SD <- index_ch$sdev
+  
+  table_pca_sep <- table_pca_w %>% 
+    rbind(table_pca_c) %>% 
+    mutate(weight1 = PC1*SD)
+  
+  write.csv(table_pca, "Outputs/table_pca_sep.csv")
+  
+  # correlogram
+  
+  var_ch <- get_pca_var(index_ch)
+  
+  pca_ch <- var_ch$cor[,1:2]
+  
+  corrplot(var_ch$cos2, is.corr=FALSE)
+  
+  graph_dir_ch <- fviz_pca_var(index_ch, axes = c(1,2), 
+                                  col.var = "contrib", # Color by contributions to the PC
+                                  gradient.cols = c(	"#3792cb", "#005b96", "#03396c", "#011f4b", "#000a14"),
+                                  repel = TRUE,     # Avoid text overlapping,
+                                  labelsize = 2) +
+    theme(axis.text = element_text(size = 10, color = "#000f1c", face = "bold", family = 'Calibri'),
+          plot.caption = element_text(hjust = 0, size = 10),
+          text = element_text(size = 9, color = "#000f1c", face = "bold", family = 'Calibri')) + 
+    labs(title = "",
+         caption = "Source: MxFLS-1, MxFLS-2, MxFLS-3.")
+  
+  ggsave("Outputs/Graphs/Position of the first 2 components ch.jpg",device = "jpeg",plot = graph_dir_ch , width = 12, height = 12, units = "cm")
+  
+
   # include PCA into our original data base
   
   women_index$PC1tot <- index_tot$x[,1] 
   
   women_index$PC2tot <- index_tot$x[,2] 
   
-  women_index$PC1work <- index_work$x[,1]
-  
-  women_index$PC1house <- index_house$x[,1]
-  
-  women_index$PC1agency <- index_agency$x[,1]
+  # For money and agency index The x and rotation signs are negative which makes the interpretation less straightforward. 
+  # Originally, a lower PC1 means a higher decisions making power being the more negative the "better" 
+  # For that reason, I will change the sign of the eigenvalues and the rotation
+
+  women_index$PC1money <- index_work$x[,1]
+
+  women_index$PC1ch <- index_ch$x[,1]
+
+ # women_index$PC1agency <- - index_agency$x[,1]
     
   women_index_res <- women_index %>% 
-    select(year, folio, folio_uni, pid_link_uni, PC1tot, PC2tot)
+    select(year, folio, folio_uni, pid_link_uni, PC1tot, PC2tot, PC1money, PC1ch)
   
   rm(list=setdiff(ls(), c("women_index", "women_index_res")))
   

@@ -158,7 +158,14 @@ base_con_09 <- c_conpor_09 %>%
   distinct()
 
 base_con <- base_con_02 %>% 
-  rbind(base_con_05, base_con_09)
+  rbind(base_con_05, base_con_09) %>% 
+  mutate(year_int = case_when(anio == 2002 ~ "2002", 
+                              anio < 10 ~ paste("200", anio, sep = ""), 
+                              anio > 9 & anio < 20 ~ paste("20", anio, sep = ""), 
+                              TRUE ~ NA_character_), 
+         date_int = make_date(year_int, mes)) %>% 
+  select(year, folio, date_int) %>% 
+  group_by(year, folio) %>% mutate(id = row_number())
 
 ##### Create base with unified folio, ls, pid_link #####
 
@@ -167,15 +174,12 @@ div_law <- read_xlsx("Inputs/Codes.xlsx", sheet = "state") %>%
   mutate(date_law  = make_date(law_divorce_year, law_divorce_month))
 
 basic_folio <- basic_ind09 %>% 
-  select(year, folio, ls, pid_link, folio_uni, pid_link_uni, pid_link_mom, pid_link_dad) %>% 
+  select(year, folio, ls, pid_link, folio_uni, pid_link_uni, pid_link_mom, pid_link_dad) %>%
+  group_by(year, folio, pid_link_uni) %>% mutate(id = row_number()) %>% 
   left_join(base_portad) %>% 
   left_join(base_con) %>% 
-  mutate(year_int = case_when(anio == 2002 ~ "2002", 
-                          anio < 10 ~ paste("200", anio, sep = ""), 
-                          anio > 9 & anio < 20 ~ paste("20", anio, sep = ""), 
-                          TRUE ~ NA_character_), 
-         date_int = make_date(year_int, mes)) %>%  
-  left_join(div_law, by = "ent") %>% 
+  left_join(div_law, by = "ent") %>%
+  ungroup() %>% 
   mutate(dummy_div = case_when(date_int > date_law ~ 1, 
                                 TRUE ~ 0))
 
@@ -562,5 +566,4 @@ rm(list=setdiff(ls(), c("basic_folio", "bio_base", "weight_s", "weight_sl", "bas
 # This is the complete raw data merged for all the 3 waves
 
 save.image(file = 'Outputs/Datasets_dissertation.RData')
-
 
