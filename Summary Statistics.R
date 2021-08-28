@@ -62,28 +62,37 @@ decisions <- dec_base %>%
   mutate(decision_maker = case_when(dh02a_1 == "A" & dh02b_1 == "" ~ "Own",
                                     dh02a_1 == "A" & dh02b_1 == "B" ~ "Both",
                                     dh02a_1 == "" & dh02b_1 == "B" ~ "Spouse",
-                                    TRUE ~ "Other"))%>%
+                                    TRUE ~ "Other")) %>%
   select(folio, ls, secuencia, year, decision_maker) %>% 
   filter(!is.na(secuencia)) %>% 
-  mutate(decision_key = case_when(secuencia == 1 | secuencia == 2 | secuencia == 6 | secuencia == 7 | secuencia == 8 ~ 1,
+  mutate(decision_key = case_when(secuencia == 7 | secuencia == 8 | secuencia == 9 | secuencia == 10 | secuencia == 11 ~ 1,
                                   TRUE ~ 0),
          decision_points = case_when(decision_maker == "Own" ~ 1, 
                                      decision_maker == "Both" ~ 1, 
                                      decision_maker == "Spouse" ~ 0, 
                                      TRUE ~ 0),
          decision_alone = case_when(decision_maker == "Own" ~ 1,
+                                    TRUE ~ 0), 
+         decision_finan = case_when( decision_key == 1 & decision_maker == "Own" ~ 1, 
+                                     decision_key == 1 & decision_maker == "Both" ~ 1, 
+                                     decision_key == 1 &  decision_maker == "Spouse" ~ 0, 
                                     TRUE ~ 0)) %>% 
   group_by(folio, ls, year) %>% 
   select(-decision_key) %>% 
-  mutate(decision_points = sum(decision_points), decision_alone = sum(decision_alone, na.rm = TRUE)) %>% 
+  mutate(decision_points = sum(decision_points), decision_alone = sum(decision_alone, na.rm = TRUE), 
+         decision_finan = sum(decision_finan, na.rm = TRUE)) %>% 
   spread(secuencia, decision_maker) %>% 
   left_join(basic_ind) %>% 
   #left_join(weight_b3a) %>% 
   #left_join(weight_b3al) %>% 
-  left_join(cog_adul_proc)
+  left_join(cog_adul_proc) %>% 
+  mutate(money_rela = case_when(`9` == "Own" ~ 1, 
+                                `9` == "Both" ~ 1, 
+                                `9` == "Spouse" ~ 0, 
+                                TRUE ~ 0))
 
 dec_points <- decisions %>% 
-  select(year, folio, ls, pid_link, decision_points, decision_alone)
+  select(year, folio, ls, pid_link, decision_points, decision_alone, decision_finan, money_rela)
 
 dec_summary <- decisions %>% 
   ungroup() %>% 
@@ -180,32 +189,34 @@ aux_adul <- basic_ind %>%
          HH = case_when(ls05_1 == 1 ~ 1, 
                         TRUE ~ 0)) %>% 
   left_join(dec_points) %>% 
-  select(year, ent, state_name, mpio, dummy_div, date_int, folio, pid_link, folio_uni, pid_link_uni,  sex, ls05_1, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
-         worked_12, ed06, ed07_1, married, ls04, ls13_2, income_c, ls14, sa07_21, sa08_21, point, test_score, decision_points, decision_alone, HH) 
+  select(year, ent, state_name, mpio, dummy_div, date_int, folio, pid_link, folio_uni, pid_link_uni,  sex, ls05_1, 
+         ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, worked_12, ed06, ed07_1, married, ls04, ls13_2, 
+         income_c, ls14, sa07_21, sa08_21, sa16_21, point, test_score, decision_points, decision_alone, HH, money_rela, decision_finan) 
 
 adul_count <- aux_adul %>% 
-  group_by(sex, year) %>% 
+  group_by(sex, year, dummy_div) %>% 
   summarise(count = n())
 
-aux_muj <- aux_adul %>% filter(sex == 0) %>% 
-  filter(ls05_1 == 1 | ls05_1 == 2) %>% 
-  select(-c("date_int")) %>% 
-  distinct()
-
-aux_hom <- aux_adul %>% filter(sex == 1) %>% 
-  filter(ls05_1 == 1 | ls05_1 == 2) %>% 
-  select(-c("date_int")) %>% 
-  distinct()
-
-summary_muj <- describeBy(aux_muj, group = aux_muj$year)
-
-summary_hom <- describeBy(aux_hom, group = aux_hom$year)
+# aux_muj <- aux_adul %>% filter(sex == 0) %>% 
+#   filter(ls05_1 == 1 | ls05_1 == 2) %>% 
+#   select(-c("date_int")) %>% 
+#   distinct()
+# 
+# aux_hom <- aux_adul %>% filter(sex == 1) %>% 
+#   filter(ls05_1 == 1 | ls05_1 == 2) %>% 
+#   select(-c("date_int")) %>% 
+#   distinct()
+# 
+# summary_muj <- describeBy(aux_muj, group = aux_muj$year)
+# 
+# summary_hom <- describeBy(aux_hom, group = aux_hom$year)
 
 #####  Summary statistics: Children summary #####
 
 aux_child <- edna_base %>% 
   left_join(bio_base) %>% 
   left_join(cog_chil_proc) %>% 
+  left_join(health_base) %>% 
   left_join(basic_ind) %>% 
   mutate(sex = case_when(ls04 == 1 ~ 1, 
                          ls04 == 3 ~ 0,
@@ -223,7 +234,7 @@ aux_child <- edna_base %>%
                                ls12 == 3 ~ 0, 
                                TRUE ~ NA_real_)) %>% 
   select(year, ent, state_name, mpio, date_int, folio, pid_link, folio_uni, pid_link_uni,  sex, ls02_2, ls03_21, ls03_22, spanish, indigenous, school_att, 
-         worked_12, edn09, sa07_21, sa08_21, point, test_score, pid_link_mom, pid_link_dad) %>% 
+         worked_12, edn09, sa07_21, esn01, sa08_21, sa16_21, point, test_score, pid_link_mom, pid_link_dad) %>% 
   mutate(date_born = make_date(ls03_22, ls03_21),
          age_months = interval(date_born, date_int)%/% months(1),
          age_aux = interval(date_born, date_int)%/% years(1), 
@@ -242,36 +253,36 @@ aux_child <- edna_base %>%
   select(-c("age_months", "age_aux", "months_aux", "age_years", "state_name")) %>% 
   distinct()
   
-  child_for_sum <- aux_child %>% 
-    select(-c("date_int")) %>% 
-    distinct()
-
-summary_child <- describeBy(child_for_sum, group = child_for_sum$year)
+#   child_for_sum <- aux_child %>% 
+#     select(-c("date_int")) %>% 
+#     distinct()
+# 
+# summary_child <- describeBy(child_for_sum, group = child_for_sum$year)
 
 ###### Save summary #####
 
-write.xlsx2(summary_muj[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_muj", overwrite = TRUE)
-write.xlsx2(summary_muj[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_muj", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_muj[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_muj", append = TRUE, overwrite = TRUE)
-
-
-write.xlsx2(summary_hom[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_hom", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_hom[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_hom", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_hom[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_hom", append = TRUE, overwrite = TRUE)
-
-
-write.xlsx2(summary_child[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_child", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_child[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_child", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_child[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_child", append = TRUE, overwrite = TRUE)
-
-write.xlsx2(summary_house[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_house", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_house[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_house", append = TRUE, overwrite = TRUE)
-write.xlsx2(summary_house[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_house", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_muj[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_muj", overwrite = TRUE)
+# write.xlsx2(summary_muj[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_muj", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_muj[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_muj", append = TRUE, overwrite = TRUE)
+# 
+# 
+# write.xlsx2(summary_hom[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_hom", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_hom[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_hom", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_hom[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_hom", append = TRUE, overwrite = TRUE)
+# 
+# 
+# write.xlsx2(summary_child[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_child", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_child[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_child", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_child[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_child", append = TRUE, overwrite = TRUE)
+# 
+# write.xlsx2(summary_house[["2002"]], "Outputs/summary.xlsx", sheetName = "2002_house", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_house[["2005"]], "Outputs/summary.xlsx", sheetName = "2005_house", append = TRUE, overwrite = TRUE)
+# write.xlsx2(summary_house[["2009"]], "Outputs/summary.xlsx", sheetName = "2009_house", append = TRUE, overwrite = TRUE)
 
 ##### Maintain and save databases needed for analysis and graphs and erase the rest 
 
 
 rm(list=setdiff(ls(), c("summary_dec", "summary_household", "summary_child", "summary_h","decisions", "aux_adul", "aux_child", 
-                        "decisions", "basic_folio")))
+                        "decisions", "basic_folio", "summary_dec")))
 
 save.image(file = 'Outputs/Data_tidy_dissertation.RData')

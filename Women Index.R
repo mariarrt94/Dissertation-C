@@ -29,7 +29,7 @@ women_index <- decisions %>%
   ungroup() %>% 
   filter(!is.na(pid_link_uni)) %>% 
   gather("dec", "person", `1`:`12`) %>% 
-  filter(ls05_1 == 1 |ls05_1 == 2) %>% 
+#  filter(ls05_1 == 1 |ls05_1 == 2) %>% 
   left_join(codes_dec) %>% 
   mutate(points_dec = case_when(person == "Spouse" ~  0, 
                                 person == "Both" ~ 1, 

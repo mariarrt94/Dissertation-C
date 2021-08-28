@@ -15,10 +15,10 @@ library(outliers)
 
 ##### Read data and set fond and colors #####
 
-source('Main information for regression.R')
+load('Outputs/Data_tidy_dissertation.RData')
 
 colors_pal <- c('#17406D','#0F6FC6','#009DD9','#176A7B','#0BD0D9',
-                '#10CF9B','#5FF3CB','#A5C249','#C8DA92','#CC0066',
+                '#00D0A8','#5FF3CB','#70AD47','#C8DA92','#CC0066',
                 '#FE001A','#FA5F00','#FEA300')
 
 colores <- colors_pal[c(1,2,3, 4,5,6,7,8,9,10,11,12,13)]
@@ -91,12 +91,13 @@ dec_summary_g <- decisions %>%
             position = position_dodge(width = 1)) + 
   facet_wrap(~ year) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1)) +
-  scale_fill_manual(values = c(5, 3)) +
-  theme(legend.position ="none", 
+  scale_fill_manual(values = c('#176A7B', '#0F6FC6')) +
+  theme(legend.position ="bottom", 
         legend.title = element_blank(), axis.title.y = element_blank(),
-        axis.text = element_text(size = 9, color = "#000f1c", face = "bold", family = 'Calibri'),
+        strip.text.x = element_text(size = 10, color = "#000f1c", face = "bold", family = 'Calibri'),
+        axis.text = element_text(size = 10, color = "#000f1c", face = "bold", family = 'Calibri'),
         plot.caption = element_text(hjust = 0, size = 9),
-        legend.text = element_blank(),
+        legend.text = element_text(size = 9, color = "#000f1c", face = "bold", family = 'Calibri'),
         text = element_text(size = 9, color = "#000f1c", face = "bold", family = 'Calibri')) +
   ylab('Percentage of persons who reported making the decision alone') +
   labs(caption = 'Source: MxFLS-1, MxFLS-2, MxFLS-3.') +
@@ -262,5 +263,5 @@ dec_summary_g <- decisions %>%
  
  ggsave("Outputs/Graphs/Test score vs. age.jpg",device = "jpeg",plot = score_age, width = 19, height = 10, units = "cm")
  
- ggsave("Outputs/Graphs/Percentage of decisions own.jpg",device = "jpeg",plot = dec_summary_g, width = 28, height = 20, units = "cm")
+ ggsave("Outputs/Graphs/Percentage of decisions own.jpg",device = "jpeg",plot = dec_summary_g, width = 26, height = 18, units = "cm")
  
