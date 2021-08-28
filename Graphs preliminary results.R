@@ -14,7 +14,7 @@ library(outliers)
 
 ##### Read data and set fond and colors #####
 
-source('Main information for regression.R')
+source('Complete information for analysis.R')
 
 colors_pal <- c('#17406D','#0F6FC6','#009DD9','#176A7B','#0BD0D9',
                 '#10CF9B','#5FF3CB','#A5C249','#C8DA92','#CC0066',
@@ -30,9 +30,9 @@ fontcolor <- '#000f1c'
 
 # for results part
 
-inc_dec_smooth <- mom_panel %>% 
-  drop_na(PC1tot) %>% 
-  ggplot(aes(x = PC1tot, y = log_income_mom)) +
+inc_dec_smooth <- mom_base %>% 
+  drop_na(PC1money_mom) %>% 
+  ggplot(aes(x = PC1money_mom, y = income_c_mom)) +
   geom_smooth(method = lm) +
   facet_wrap(~ year) +
   scale_fill_manual(values = c(colores)) +

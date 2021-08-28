@@ -31,7 +31,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "hh02w_b5", "v_conpor")
+ names <- c("v_portad", "v_edna", "hh02w_b5", "v_conpor", "v_esn")
  
  for(i in names){
    filepath <- file.path("Data/2002/hh02dta_b5", paste(i,".dta",sep=""))
@@ -86,7 +86,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "ehh05w_b5", "ehh05w_b5l", "v_conpor")
+ names <- c("v_portad", "v_edna", "ehh05w_b5", "ehh05w_b5l", "v_conpor", "v_esn")
  
  for(i in names){
     filepath <- file.path("Data/2005/hh05dta_b5", paste(i,".dta",sep=""))
@@ -142,7 +142,7 @@ library(purrr)
  
  # Book V - Characteristics of Children younger than 15 years old 
  
- names <- c("v_portad", "v_edna", "hh09w_b5", "hh09_lw_b5", "v_conpor")
+ names <- c("v_portad", "v_edna", "hh09w_b5", "hh09_lw_b5", "v_conpor", "v_esn")
  
  for(i in names){
     filepath <- file.path("Data/2009/hh09dta_b5", paste(i,".dta",sep=""))

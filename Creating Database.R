@@ -369,6 +369,41 @@ edna_base <- edna_02 %>%
  # left_join(weight_5) %>% 
 #  left_join(weight_5l)
 
+# book health
+
+health_02 <- v_esn_02 %>% 
+  left_join(v_portad_02) %>% 
+  mutate(folio_aux = str_sub(folio, 1L, -3L),
+         length = str_length(folio_aux),
+         folio_2 = case_when(length == 2 ~ paste("0000", folio_aux, sep = ""),
+                             length == 3 ~ paste("000", folio_aux, sep = ""),
+                             length == 4 ~ paste("00", folio_aux, sep = ""),
+                             length == 5 ~ paste("0", folio_aux, sep = ""),
+                             TRUE ~ folio_aux),
+         folio = paste(folio_2, "00", sep = ""),
+         ls_aux = as.character(ls),
+         ls = case_when(ls<10 ~ paste("0", ls_aux, sep = ""),
+                        TRUE ~ ls_aux),
+         pid_link = paste(folio_2, "00", ls, sep = ""),
+         year = 2002) %>% 
+  select(year, folio, ls, pid_link, esn01)
+
+health_05 <- v_esn_05 %>% 
+  left_join(v_portad_05) %>% 
+  mutate(year = 2005) %>% 
+  select(year, folio, ls, pid_link, esn01)
+
+health_09 <- v_esn_09 %>% 
+  left_join(v_portad_09) %>% 
+  mutate(year = 2009) %>%
+  select(year, folio, ls, pid_link, esn01)
+
+health_base <- health_02 %>% 
+  rbind(health_05, health_09) %>% 
+  left_join(basic_folio)# %>% 
+# left_join(weight_5) %>% 
+#  left_join(weight_5l)
+
 ##### Book S: Anthropometrics and Biomarkers #####
 
 # Weights
@@ -417,16 +452,17 @@ bio_02 <- s_sa_02 %>%
          pid_link = paste(folio_2, "00", ls, sep = ""),
          year = 2002,
          sa07_21 = sa07_2, 
-         sa08_21 = sa09_2) %>% 
-  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21) 
+         sa08_21 = sa09_2, 
+         sa16_21 = sa17_2) %>% 
+  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21, sa16_21) 
 
 bio_05 <- s_sa_05 %>% 
   mutate(year = 2005) %>% 
-  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21) 
+  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21, sa16_21) 
 
 bio_09 <- s_sa_09 %>% 
   mutate(year = 2009) %>%
-  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21) 
+  select(year, folio, pid_link, ls, sa01, sa03, sa07_21, sa08_21, sa16_21) 
 
 bio_base <- bio_02 %>% 
   rbind(bio_05, bio_09) %>% 
@@ -558,7 +594,7 @@ cog_ch <- cog_ch_02 %>%
 
 ##### Select necessary databases and generate RData #####
 
-rm(list=setdiff(ls(), c("basic_folio", "bio_base", "weight_s", "weight_sl", "basic_ind", "ed_base",
+rm(list=setdiff(ls(), c("basic_folio", "bio_base", "weight_s", "weight_sl", "basic_ind", "ed_base", "health_base",
                         "weight_c", "weight_cl", "cog_ad", "weight_ea", "weight_eal", "cog_ch", 
                         "weight_en", "weight_enl", "dec_base", "weight_b3a", "weight_b3al", 
                         "edna_base", "weight_5", "weight_5l")))

@@ -54,10 +54,10 @@ mom_base <- aux_adul %>% filter(sex == 0) %>%
   rename(age_mom = ls02_2, spanish_mom = spanish, indigenous_mom = indigenous, worked_12_mom = worked_12, 
          edu_mom = ed06, married_mom = married, income_c_mom = income_c, height_mom = sa07_21, weight_mom = sa08_21, 
          test_score_mom = test_score, decision_mom = decision_points, HH_mom = HH, pid_link_mom = pid_link_uni, rel_hh_mom = ls05_1, 
-         PC1tot_mom = PC1tot, PC2tot_mom = PC2tot, PC1money_mom = PC1money, PC1ch_mom = PC1ch) %>% 
-  select(year, pid_link_mom, age_mom, spanish_mom, indigenous_mom, worked_12_mom, edu_mom, married_mom, income_c_mom, 
-         height_mom, weight_mom, test_score_mom, decision_mom, rel_hh_mom, HH_mom, dummy_div, PC1tot_mom, PC2tot_mom, PC1money_mom, 
-         PC1ch_mom) %>% 
+         PC1tot_mom = PC1tot, PC2tot_mom = PC2tot, PC1money_mom = PC1money, PC1ch_mom = PC1ch, hemo_mom = sa16_21) %>% 
+  select(year, ent, mpio, dummy_div, pid_link_mom, age_mom, spanish_mom, indigenous_mom, worked_12_mom, edu_mom, married_mom, income_c_mom, 
+         height_mom, weight_mom, hemo_mom, test_score_mom, decision_mom, rel_hh_mom, HH_mom, dummy_div, PC1tot_mom, PC2tot_mom, PC1money_mom, 
+         PC1ch_mom, decision_finan, money_rela) %>% 
   distinct()
   
 dad_base <- aux_adul %>% filter(sex == 1) %>% 
@@ -65,13 +65,18 @@ dad_base <- aux_adul %>% filter(sex == 1) %>%
   rename(age_dad = ls02_2, spanish_dad = spanish, indigenous_dad = indigenous, worked_12_dad = worked_12, 
          edu_dad = ed06, married_dad = married, income_c_dad = income_c, height_dad = sa07_21, weight_dad = sa08_21, 
          test_score_dad = test_score, decision_dad = decision_points, HH_dad = HH, pid_link_dad = pid_link_uni, 
-         PC1tot_dad = PC1tot, PC2tot_dad = PC2tot, rel_hh_dad = ls05_1,  PC1money_dad = PC1money, PC1ch_dad = PC1ch) %>% 
+         PC1tot_dad = PC1tot, PC2tot_dad = PC2tot, rel_hh_dad = ls05_1,  PC1money_dad = PC1money, PC1ch_dad = PC1ch, hemo_dad = sa16_21) %>% 
   select(year, pid_link_dad, age_dad, spanish_dad, indigenous_dad, worked_12_dad, edu_dad, married_dad, income_c_dad, 
-         height_dad, weight_dad, test_score_dad, decision_dad,rel_hh_dad, HH_dad, PC1tot_dad, PC2tot_dad, PC1money_dad, 
+         height_dad, weight_dad, hemo_dad, test_score_dad, decision_dad,rel_hh_dad, HH_dad, PC1tot_dad, PC2tot_dad, PC1money_dad, 
          PC1ch_dad) %>% 
   distinct()
 
 # here we need to merge the data from the parents to the children and create anthropocentric indicators, also scale test.
+
+base_height <- aux_child %>% 
+  group_by(ls02_2, year, sex) %>% 
+  summarise(med_height = median(sa07_21, na.rm = TRUE), sd_height = sd(sa07_21, na.rm = TRUE)) %>%
+  filter(ls02_2 <16)
 
 base_child <- aux_child %>%
   filter(ls02_2 <16) %>% 
@@ -80,12 +85,15 @@ base_child <- aux_child %>%
   mutate(decision_women = decision_mom - decision_dad) %>% 
   distinct() %>% 
   left_join(hfa, by = c("Month", "sex")) %>%
-  rename(height = sa07_21, weight = sa08_21) %>% 
+  rename(height = sa07_21, weight = sa08_21, hemo = sa16_21, health_stat = esn01) %>% 
   group_by(ls02_2, year) %>% 
   mutate(test_score_z = scale(test_score)) %>% 
   ungroup() %>% 
+  left_join(base_height) %>% 
+  mutate(height_z_me = (height - med_height)/sd_height) %>% 
   group_by(ls02_2, year, sex) %>% 
-  mutate(height_z = scale(height)) %>% 
+  mutate(height_z = scale(height), 
+         hemo_z = scale(hemo)) %>% 
   mutate(hfa_z = (height - Median)/StDev) %>% 
   filter(rel_hh_mom == 1 | rel_hh_mom == 2 | rel_hh_dad == 1 | rel_hh_dad == 2) %>% 
   select(-c("ls03_21", "ls03_22", "date_born")) %>% 
@@ -105,10 +113,11 @@ base_child <- aux_child %>%
                                         income_crea_pc != 0 & !is.na(income_crea_pc) ~ log(income_crea_pc),
                                         is.na(income_crea_pc)~ NA_real_, 
                                         TRUE ~ NA_real_)) %>% 
-  select(year, ent, folio_uni, pid_link_uni, sex, ls02_2, spanish, school_att, worked_12, edn09, 
-         height, test_score, test_score_z, hfa_z, height_z, pid_link_mom, pid_link_dad, age_mom, spanish_mom, worked_12_mom, edu_mom, married_mom, 
-         test_score_mom, decision_mom, height_mom, rel_hh_mom, HH_mom, dummy_div, PC1tot_mom, PC2tot_mom, PC1money_mom, 
-         PC1ch_mom, age_dad, spanish_dad, worked_12_dad, edu_dad, height_dad, test_score_dad, income_c_dad,
+  rename(ent = ent.x, mpio = mpio.x) %>% 
+  select(year, ent, mpio, dummy_div, folio_uni, pid_link_uni, sex, ls02_2, spanish, school_att, worked_12, edn09, 
+         height, test_score, test_score_z, health_stat, hfa_z, height_z, height_z_me, hemo, hemo_z, pid_link_mom, pid_link_dad, age_mom, spanish_mom, worked_12_mom, edu_mom, married_mom, 
+         test_score_mom, decision_mom, height_mom, hemo_mom, rel_hh_mom, HH_mom, dummy_div, PC1tot_mom, PC2tot_mom, PC1money_mom, 
+         PC1ch_mom, decision_finan, money_rela, age_dad, spanish_dad, worked_12_dad, edu_dad, height_dad, hemo_dad, test_score_dad, income_c_dad,
          decision_dad, hfa_z, test_score_z, income_crea, log_income_crea, income_crea_pc, log_income_crea_pc, children, number_persons)
 
 ##### Select necessary databases #####

@@ -38,6 +38,17 @@ fmt_pvalue_with_stars <- function(x) {
   )
 }
 
+# manually calculate differences in means
+
+data_stats_m <- data_child_sum %>% 
+  filter(`More decisions by mom` == "Dad > mom")
+
+data_stats_d <- data_child_sum %>% 
+  filter(`More decisions by mom` == "Mom > dad")
+
+t.test(data_stats_d$`Number of children`, data_stats_m$`Number of children`)
+
+
 table_child <- data_child_sum %>%
   ungroup() %>% 
   select(-c(year)) %>% 
